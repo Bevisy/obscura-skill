@@ -1,6 +1,6 @@
 ---
 name: obscura
-description: Use when scraping or automating pages with obscura CLI or MCP.
+description: Use when scraping or automating pages with obscura.
 ---
 
 # Obscura
