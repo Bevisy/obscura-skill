@@ -28,9 +28,15 @@ jobs:
           echo "testing obscura $tag"
           curl -fsSL -o /tmp/obscura.tar.gz \
             "https://github.com/h4ckf0r0day/obscura/releases/download/$tag/obscura-x86_64-linux.tar.gz"
-          tar xzf /tmp/obscura.tar.gz -C /tmp
-          sudo install -m755 /tmp/obscura /usr/local/bin/obscura
-          obscura --version
+          # The tarball carries obscura AND obscura-worker; scrape spawns the worker
+          # from its own directory, so install both.
+          mkdir -p "$HOME/.local/bin" /tmp/obscura-dist
+          tar xzf /tmp/obscura.tar.gz -C /tmp/obscura-dist
+          install -m755 /tmp/obscura-dist/obscura "$HOME/.local/bin/obscura"
+          install -m755 /tmp/obscura-dist/obscura-worker "$HOME/.local/bin/obscura-worker"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/obscura" --version
+          ls -l "$HOME/.local/bin"
 
       - name: Check every SKILL.md claim
         run: ./scripts/smoke.sh

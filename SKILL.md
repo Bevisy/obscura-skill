@@ -81,6 +81,10 @@ obscura scrape https://example.com https://example.org \
 
 `scrape` extracts values; `fetch --file` only reports per-URL status and byte counts.
 
+`scrape` fans work out to `obscura-worker` processes and finds them **in the same
+directory as the `obscura` binary**. Homebrew and the release tarballs ship both;
+an install that copies only `obscura` makes `scrape` print nothing and exit 0.
+
 ## MCP server
 
 ```bash
@@ -130,22 +134,26 @@ identity, and treat it as a credential store — it contains live session tokens
 
 ## Pitfalls (each observed on 0.2.6)
 
-1. **Loopback is blocked by default.** `obscura fetch http://127.0.0.1:8765/` fails with
+1. **A lone `obscura` binary breaks `scrape` silently.** Work is fanned out to
+   `obscura-worker`, which is looked up in the `obscura` binary's own directory. Homebrew
+   and the release tarballs ship both; an install that copies only `obscura` gets empty
+   output and exit code 0 (hit in CI). `scripts/smoke.sh` checks for it.
+2. **Loopback is blocked by default.** `obscura fetch http://127.0.0.1:8765/` fails with
    `Access to private/internal IP address 127.0.0.1 is not allowed` (SSRF guard).
    Add `--allow-private-network` or set `OBSCURA_ALLOW_PRIVATE_NETWORK=1`. Any local
    dev-server or E2E flow dies here without it.
-2. **`--selector` and `--eval` do not combine.** With both, the eval is silently dropped
+3. **`--selector` and `--eval` do not combine.** With both, the eval is silently dropped
    and fetch prints HTML. Wait via `--wait-until`/`--wait`, or poll inside the eval.
-3. **`--dump markdown` is a raw DOM→MD pass** — nav chrome, tab runs and blank lines
+4. **`--dump markdown` is a raw DOM→MD pass** — nav chrome, tab runs and blank lines
    survive (checked on wikipedia and quotes.toscrape). For readable article text prefer
    `--dump text` plus slicing, or a targeted `--eval`.
-4. **`fetch` has no JSON mode.** Return JSON yourself: `--eval "JSON.stringify(...)"`.
-5. **`--file` batch mode returns status lines**, not page content:
+5. **`fetch` has no JSON mode.** Return JSON yourself: `--eval "JSON.stringify(...)"`.
+6. **`--file` batch mode returns status lines**, not page content:
    `{url, ok, status, content_type, bytes, elapsed_ms}`.
-6. **Version strings disagree.** `/json/version` advertises `Chrome/145.0.0.0`, the
+7. **Version strings disagree.** `/json/version` advertises `Chrome/145.0.0.0`, the
    default `fetch` UA is `Chrome/143.0.0.0` (Windows). Don't gate behaviour on either;
    set `--user-agent` when a site needs a specific one.
-7. **Don't shell-loop `fetch`** over thousands of URLs — use `scrape` (worker pool) or
+8. **Don't shell-loop `fetch`** over thousands of URLs — use `scrape` (worker pool) or
    `fetch --file` (concurrency option). Both reuse one engine.
 
 ## Anti-patterns

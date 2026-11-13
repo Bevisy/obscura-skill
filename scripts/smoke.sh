@@ -22,6 +22,10 @@ bad() { printf 'FAIL %s\n     %s\n' "$1" "$2"; fails=$((fails+1)); }
 assert() { [ "$2" = "$3" ] && ok "$1" || bad "$1" "expected [$2] got [$3]"; }
 contains() { case "$3" in *"$2"*) ok "$1";; *) bad "$1" "missing [$2] in [${3:0:120}]";; esac; }
 
+bin_dir=$(cd "$(dirname "$(command -v obscura)")" && pwd)
+[ -x "$bin_dir/obscura-worker" ] && ok "obscura-worker sits beside obscura" \
+  || bad "obscura-worker" "missing in $bin_dir — scrape will return nothing"
+
 v=$(obscura --version | awk '{print $2}')
 case "$v" in 0.2.*) ok "version 0.2.x ($v)";; *) bad "version" "skill targets 0.2.x, binary says $v";; esac
 
