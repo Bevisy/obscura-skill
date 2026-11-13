@@ -1,0 +1,36 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1"          # Mondays: catch a new obscura release rotting the skill
+  workflow_dispatch:
+    inputs:
+      obscura_version:
+        description: "obscura tag to test (e.g. v0.2.6); empty = latest release"
+        required: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install obscura
+        run: |
+          set -euo pipefail
+          tag="${{ inputs.obscura_version }}"
+          if [ -z "$tag" ]; then
+            tag=$(curl -fsSL https://api.github.com/repos/h4ckf0r0day/obscura/releases/latest | jq -r .tag_name)
+          fi
+          echo "testing obscura $tag"
+          curl -fsSL -o /tmp/obscura.tar.gz \
+            "https://github.com/h4ckf0r0day/obscura/releases/download/$tag/obscura-x86_64-linux.tar.gz"
+          tar xzf /tmp/obscura.tar.gz -C /tmp
+          sudo install -m755 /tmp/obscura /usr/local/bin/obscura
+          obscura --version
+
+      - name: Check every SKILL.md claim
+        run: ./scripts/smoke.sh
