@@ -1,5 +1,7 @@
 # obscura-skill
 
+[![verify](https://github.com/Bevisy/obscura-skill/actions/workflows/verify.yml/badge.svg)](https://github.com/Bevisy/obscura-skill/actions/workflows/verify.yml)
+
 An agent skill for [obscura](https://github.com/h4ckf0r0day/obscura) — a single-binary
 Rust headless browser that speaks CDP, runs real JavaScript, and needs no Chrome or Node.
 
@@ -26,7 +28,14 @@ things that bite in 0.2.x:
 
 ## Install
 
-Hermes:
+ClawHub (also what `hermes skills search obscura` resolves to):
+
+```bash
+hermes skills install @bevisy/obscura
+clawhub install @bevisy/obscura
+```
+
+Straight from GitHub:
 
 ```bash
 git clone https://github.com/bevisy/obscura-skill ~/.hermes/skills/obscura
