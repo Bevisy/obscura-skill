@@ -39,9 +39,12 @@ orig=$(obscura fetch https://api.github.com/repos/h4ckf0r0day/obscura --dump ori
 contains "fetch --dump original returns raw JSON" '"full_name"' "$orig"
 
 # --- scrape ---
-n=$(obscura scrape https://example.com https://example.org --eval "document.title" -q 2>/dev/null \
+scrape_err=$(mktemp)
+n=$(obscura scrape https://example.com https://example.org --eval "document.title" -q 2>"$scrape_err" \
     | python3 -c 'import json,sys; print(json.load(sys.stdin)["total_urls"])' 2>/dev/null)
 assert "scrape json total_urls" "2" "$n"
+[ -z "$n" ] && sed -n '1,10p' "$scrape_err" | sed 's/^/     stderr: /'
+rm -f "$scrape_err"
 
 lines=$(obscura scrape https://example.com https://example.org --eval "document.title" --format text -q 2>/dev/null | wc -l | tr -d ' ')
 assert "scrape --format text line count" "2" "$lines"
